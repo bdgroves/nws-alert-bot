@@ -81,7 +81,7 @@ def save_cache(posted: set) -> None:
     """Persist posted IDs to disk. Keep only the last 2000 to avoid bloat."""
     recent = list(posted)[-2000:]
     with open(CACHE_FILE, "w") as f:
-        json.dump({"posted": recent, "updated": datetime.now(timezone.utc).isoformat()}, f)
+        json.dump({"posted": recent, "updated": datetime.utcnow().isoformat()}, f)
 
 
 # ── NWS fetch ─────────────────────────────────────────────────────────────────
@@ -92,24 +92,28 @@ def fetch_alerts(lookback_minutes: int) -> list[dict]:
     Returns a list of alert feature dicts.
     """
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=lookback_minutes)
-    params = {
-        "status": "actual",
-    }
+    STATES = ["WA", "OR", "NV", "CA"]
     headers = {
         "User-Agent": "NWSAlertBot/1.0 (github.com/bdgroves/nws-alert-bot; bdgroves@github)",
         "Accept": "application/geo+json",
     }
 
-    try:
-        resp = requests.get(NWS_ALERTS_URL, params=params, headers=headers, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
-    except requests.RequestException as e:
-        log.error(f"Failed to fetch NWS alerts: {e}")
-        return []
+    all_features = []
+    for state in STATES:
+        try:
+            resp = requests.get(
+                f"{NWS_ALERTS_URL}/area/{state}",
+                headers=headers,
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            all_features.extend(data.get("features", []))
+        except requests.RequestException as e:
+            log.error(f"Failed to fetch alerts for {state}: {e}")
 
-    features = data.get("features", [])
-    log.info(f"Fetched {len(features)} total active alerts from NWS.")
+    features = all_features
+    log.info(f"Fetched {len(features)} total active alerts for WA/OR/NV/CA.")
 
     # Filter to alerts sent/updated within the lookback window
     recent = []
