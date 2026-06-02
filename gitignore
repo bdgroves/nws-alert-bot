@@ -1,0 +1,25 @@
+# Pixi environment (never commit the env itself, only pyproject.toml + pixi.lock)
+.pixi/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Secrets — never commit these!
+.env
+*.env
+secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

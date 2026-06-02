@@ -1,0 +1,50 @@
+[project]
+name = "nws-alert-bot"
+version = "1.0.0"
+description = "Automated NWS weather alert bot that posts to X/Twitter via GitHub Actions"
+requires-python = ">=3.12"
+
+# PyPI dependencies (tweepy + requests — same as the old requirements.txt)
+dependencies = [
+    "tweepy>=4.14,<5",
+    "requests>=2.32,<3",
+]
+
+# ── Pixi workspace config ────────────────────────────────────────────────────
+[tool.pixi.workspace]
+channels  = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+
+# Conda-managed Python (pixi pins the interpreter here)
+[tool.pixi.dependencies]
+python = ">=3.12,<3.13"
+
+# PyPI deps are pulled from [project.dependencies] above automatically.
+# Add extra PyPI-only packages here if needed:
+[tool.pixi.pypi-dependencies]
+nws-alert-bot = { path = ".", editable = true }
+
+# ── Pixi tasks (run with: pixi run <task>) ───────────────────────────────────
+[tool.pixi.tasks]
+# Run the bot once (for local testing)
+bot   = "python bot/main.py"
+
+# Quick smoke-test: fetch alerts, print them, don't post to Twitter
+dry-run = { cmd = "python bot/main.py", env = { DRY_RUN = "1" } }
+
+# Show how many alerts are currently active nationwide
+check  = "python -c \"import requests,json; r=requests.get('https://api.weather.gov/alerts/active',headers={'User-Agent':'test','Accept':'application/geo+json'}); d=r.json(); print(f'{len(d[\\\"features\\\"])} active alerts nationwide')\""
+
+# ── Optional dev environment ─────────────────────────────────────────────────
+[tool.pixi.feature.dev.dependencies]
+pytest   = ">=8,<9"
+ruff     = ">=0.4,<1"
+
+[tool.pixi.feature.dev.tasks]
+lint  = "ruff check bot/"
+fmt   = "ruff format bot/"
+test  = "pytest tests/ -v"
+
+[tool.pixi.environments]
+default = { features = [],      solve-group = "default" }
+dev     = { features = ["dev"], solve-group = "default" }
