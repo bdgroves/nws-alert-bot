@@ -1,0 +1,25 @@
+﻿# Pixi environment
+.pixi/
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Secrets
+.env
+*.env
+secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

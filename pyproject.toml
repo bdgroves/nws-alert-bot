@@ -5,10 +5,8 @@ description = "Automated NWS weather alert bot that posts to X/Twitter via GitHu
 requires-python = ">=3.12"
 
 # PyPI dependencies (tweepy + requests — same as the old requirements.txt)
-dependencies = [
-    "tweepy>=4.14,<5",
-    "requests>=2.32,<3",
-]
+# Dependencies declared directly in [tool.pixi.pypi-dependencies] below
+dependencies = []
 
 # ── Pixi workspace config ────────────────────────────────────────────────────
 [tool.pixi.workspace]
@@ -20,9 +18,9 @@ platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 python = ">=3.12,<3.13"
 
 # PyPI deps are pulled from [project.dependencies] above automatically.
-# Add extra PyPI-only packages here if needed:
 [tool.pixi.pypi-dependencies]
-nws-alert-bot = { path = ".", editable = true }
+tweepy    = ">=4.14,<5"
+requests  = ">=2.32,<3"
 
 # ── Pixi tasks (run with: pixi run <task>) ───────────────────────────────────
 [tool.pixi.tasks]

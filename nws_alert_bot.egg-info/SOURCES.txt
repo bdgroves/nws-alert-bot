@@ -1,8 +1,0 @@
-README.md
-pyproject.toml
-bot/main.py
-nws_alert_bot.egg-info/PKG-INFO
-nws_alert_bot.egg-info/SOURCES.txt
-nws_alert_bot.egg-info/dependency_links.txt
-nws_alert_bot.egg-info/requires.txt
-nws_alert_bot.egg-info/top_level.txt

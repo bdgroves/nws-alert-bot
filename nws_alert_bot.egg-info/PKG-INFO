@@ -1,7 +1,0 @@
-Metadata-Version: 2.4
-Name: nws-alert-bot
-Version: 1.0.0
-Summary: Automated NWS weather alert bot that posts to X/Twitter via GitHub Actions
-Requires-Python: >=3.12
-Requires-Dist: tweepy<5,>=4.14
-Requires-Dist: requests<3,>=2.32
