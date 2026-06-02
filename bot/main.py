@@ -186,13 +186,16 @@ def format_tweet(props: dict) -> str:
                 or props.get("description", "")[:120])
     headline = headline.strip()
 
-    # Expiry time
+    # Expiry time — display in Pacific time (auto PST/PDT)
     expires_str = props.get("expires") or props.get("ends") or ""
     expires_label = ""
     if expires_str:
         try:
+            from zoneinfo import ZoneInfo
             exp_dt = datetime.fromisoformat(expires_str.replace("Z", "+00:00"))
-            expires_label = f"Until {exp_dt.strftime('%I:%M %p %Z').lstrip('0')}"
+            pacific = exp_dt.astimezone(ZoneInfo("America/Los_Angeles"))
+            tz_abbr = "PDT" if pacific.dst() else "PST"
+            expires_label = f"Until {pacific.strftime('%I:%M %p').lstrip('0')} {tz_abbr}"
         except ValueError:
             pass
 
