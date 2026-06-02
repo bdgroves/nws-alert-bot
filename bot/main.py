@@ -94,10 +94,9 @@ def fetch_alerts(lookback_minutes: int) -> list[dict]:
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=lookback_minutes)
     params = {
         "status": "actual",
-        "limit": 500,
     }
     headers = {
-        "User-Agent": "NWSAlertBot/1.0 (github-actions; contact via repo)",
+        "User-Agent": "NWSAlertBot/1.0 (github.com/bdgroves/nws-alert-bot; bdgroves@github)",
         "Accept": "application/geo+json",
     }
 
