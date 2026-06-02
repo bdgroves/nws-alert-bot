@@ -94,7 +94,6 @@ def fetch_alerts(lookback_minutes: int) -> list[dict]:
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=lookback_minutes)
     params = {
         "status": "actual",
-        "message_type": "alert,update,cancel",
         "limit": 500,
     }
     headers = {
