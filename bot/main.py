@@ -81,7 +81,7 @@ def save_cache(posted: set) -> None:
     """Persist posted IDs to disk. Keep only the last 2000 to avoid bloat."""
     recent = list(posted)[-2000:]
     with open(CACHE_FILE, "w") as f:
-        json.dump({"posted": recent, "updated": datetime.utcnow().isoformat()}, f)
+        json.dump({"posted": recent, "updated": datetime.now(timezone.utc).isoformat()}, f)
 
 
 # ── NWS fetch ─────────────────────────────────────────────────────────────────
