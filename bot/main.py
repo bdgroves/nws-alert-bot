@@ -89,7 +89,7 @@ def load_cache():
 
 def save_cache(posted):
     json.dump({"posted":list(posted)[-2000:],
-               "updated":datetime.utcnow().isoformat()},
+               "updated":datetime.now(timezone.utc).isoformat()},
               open(CACHE_FILE,"w"))
 
 def post_tweet(client, text, uid, posted, new_count, error_count):
@@ -288,14 +288,24 @@ def fetch_sounding_tweet(posted):
         i700   = int(np.argmin(np.abs(p-700)))
         t500   = float(T[i500]); t700 = float(T[i700]); td700 = float(Td[i700])
         max_w  = float(np.nanmax(spd)) if len(spd) > 0 else 0
-        snow   = "  ❄️ Snow lvl low" if t700 < 0 else ("  🌨️ Mixed precip" if t700 < 2 else "")
+        # PNW snow level guidance from 700mb temp
+        if t700 < -2:
+            snow = "  ❄️ Snow to valley floors"
+        elif t700 < 0:
+            snow = "  ❄️ Snow lvl low"
+        elif t700 < 2:
+            snow = "  🌨️ Mixed precip at passes"
+        elif t700 < 5:
+            snow = "  🌧️ Rain, snow above 4000ft"
+        else:
+            snow = ""
         pac    = launch_time.astimezone(PACIFIC)
         tz     = "PDT" if pac.dst() else "PST"
         ts     = pac.strftime("%I:%M %p").lstrip("0")
         txt    = (f"🎈 Seattle Upper Air — {ts} {tz}\n"
                   f"Sfc: {t_sfc:.1f}°C  RH:{rh_sfc}%\n"
                   f"700mb: {t700:.1f}°C  500mb: {t500:.1f}°C{snow}\n"
-                  f"Max wind: {max_w:.0f}kt\n#WAwx #Seattle #upperair #PNW")
+                  f"Max wind: {max_w:.0f}kt\n#WAwx #Seattle #Tacoma #upperair #PNW")
         return (txt[:MAX_TWEET_LEN-1]+"…" if len(txt)>MAX_TWEET_LEN else txt), uid
     except Exception as e:
         log.debug(f"Sounding: {e}"); return None
