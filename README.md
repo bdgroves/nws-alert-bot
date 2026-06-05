@@ -19,6 +19,10 @@ Runs every 5 minutes on GitHub Actions. No server. No cost. Just the data.
 | 🌋 **USGS Earthquakes** | M2.5+ in Puget Sound region | 46-49.5°N, 125-120°W |
 | 🌡️ **Surface Obs Snapshot** | Every ~3 hours | Seattle, Tacoma, Renton |
 | 🎈 **Upper Air Sounding** | 30-90 min after 00Z/12Z launches | SEA (Seattle) balloon |
+| 🔥 **NIFC Wildfires** | New fire ≥10 acres, <85% contained | King/Pierce extended bbox |
+| 🌲🔥 **InciWeb** | New WA wildfire incident update | Washington state |
+| 🌌 **NOAA Space Weather** | Geomagnetic storm G1+ alert | Nationwide (aurora visible PNW) |
+| ⛵ **Marine Alerts** | Small Craft, Gale, Tsunami | Puget Sound marine zones |
 
 **King & Pierce County alerts are flagged with 📍** and logged separately so you always know when something is headed your way.
 

@@ -36,6 +36,26 @@ HEADERS          = {"User-Agent": "NWSAlertBot/2.0 (github.com/bdgroves/nws-aler
                     "Accept":     "application/geo+json"}
 STATES           = ["WA", "OR", "CA", "NV"]
 
+# ── Wildfire sources ──────────────────────────────────────────────────────────
+# NIFC WFIGS — active fire perimeters nationwide
+NIFC_URL = (
+    "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/"
+    "WFIGS_Interagency_Perimeters_Current/FeatureServer/0/query"
+)
+# InciWeb — incident information (text reports)
+INCIWEB_URL = "https://inciweb.wildfire.gov/feeds/rss/incidents/"
+
+# King/Pierce wildfire bbox — slightly wider to catch nearby fires
+# Covers from the coast to the Cascades, Snohomish to Lewis County
+KP_FIRE_BBOX = (-123.5, 46.7, -121.0, 48.2)
+FIRE_MIN_ACRES = 10
+
+# ── NOAA special products ─────────────────────────────────────────────────────
+# NOAA Space Weather Center — geomagnetic storm alerts
+SWPC_ALERT_URL = "https://services.swpc.noaa.gov/products/alerts.json"
+# NWS marine zones for Puget Sound / Strait of Juan de Fuca
+MARINE_ZONES = {"PZZ131", "PZZ132", "PZZ133", "PZZ134", "PZZ135"}
+
 # NWS forecast zones — King & Pierce County WA and close neighbors
 KING_PIERCE_ZONES = {
     "WAZ558", "WAZ559", "WAZ556", "WAZ560",
@@ -134,6 +154,8 @@ def format_alert_tweet(props):
     exp_str  = props.get("expires") or props.get("ends") or ""
     exp_lbl  = f"Until {fmt_pac(exp_str)}" if exp_str else ""
     kp       = " 📍" if is_king_pierce(props) else ""
+    marine   = " ⛵" if is_marine_alert(props) else ""
+    kp       = kp or marine
     url      = props.get("@id","")
     header   = f"{emoji} {event}{kp} — {area}"
     if len(header) > 110: header = f"{emoji} {event}{kp} — {area[:85]}…"
@@ -309,6 +331,162 @@ def fetch_sounding_tweet(posted):
         return (txt[:MAX_TWEET_LEN-1]+"…" if len(txt)>MAX_TWEET_LEN else txt), uid
     except Exception as e:
         log.debug(f"Sounding: {e}"); return None
+
+# ── Wildfire monitoring ──────────────────────────────────────────────────────
+def fetch_wildfires(posted: set) -> list[tuple[str, str]]:
+    """
+    Fetch active NIFC fire perimeters within King/Pierce County extended bbox.
+    Also catches fires approaching from eastern WA / Cascades.
+    """
+    import time as _time
+    params = {
+        "where":        ("attr_IncidentTypeCategory = 'WF' AND "
+                         "(attr_PercentContained < 85 OR attr_PercentContained IS NULL)"),
+        "geometry":     f"{KP_FIRE_BBOX[0]},{KP_FIRE_BBOX[1]},{KP_FIRE_BBOX[2]},{KP_FIRE_BBOX[3]}",
+        "geometryType": "esriGeometryEnvelope",
+        "spatialRel":   "esriSpatialRelIntersects",
+        "outFields":    ("poly_IncidentName,poly_GISAcres,poly_DateCurrent,"
+                         "attr_PercentContained,attr_POOCounty,attr_POOState,"
+                         "attr_UniqueFireIdentifier,attr_InitialLatitude,attr_InitialLongitude"),
+        "f":            "json",
+    }
+    results = []
+    last_err = None
+    for attempt in range(3):
+        try:
+            r = requests.get(NIFC_URL, params=params,
+                             headers={"User-Agent": HEADERS["User-Agent"]},
+                             timeout=30)
+            r.raise_for_status()
+            features = r.json().get("features", [])
+            break
+        except Exception as e:
+            last_err = e
+            if attempt < 2:
+                _time.sleep(5 * (attempt + 1))
+    else:
+        log.error(f"NIFC fetch failed: {last_err}")
+        return []
+
+    for f in features:
+        attrs = f.get("attributes", {})
+        name  = attrs.get("poly_IncidentName", "Unknown Fire")
+        acres = attrs.get("poly_GISAcres", 0) or 0
+        pct   = attrs.get("attr_PercentContained")
+        county = attrs.get("attr_POOCounty", "")
+        state  = attrs.get("attr_POOState", "WA")
+        uid_raw = attrs.get("attr_UniqueFireIdentifier") or f"{name}-{county}"
+        uid = "nifc-" + hashlib.md5(str(uid_raw).encode()).hexdigest()[:8]
+        if uid in posted or acres < FIRE_MIN_ACRES:
+            continue
+        pct_str = f" · {pct:.0f}% contained" if pct is not None else " · containment unknown"
+        text = f"\U0001f525 Wildfire \u2014 {name}\n{acres:.0f} acres{pct_str}\n{county}, {state}\n#WAwx #wildfire #PNW"
+        if len(text) <= MAX_TWEET_LEN:
+            results.append((text, uid))
+    log.info(f"NIFC: {len(results)} active fires in King/Pierce extended bbox.")
+    return results
+
+
+def fetch_inciweb(posted: set) -> list[tuple[str, str]]:
+    """Fetch InciWeb RSS for WA wildfire incident updates."""
+    try:
+        import xml.etree.ElementTree as ET
+        r = requests.get(INCIWEB_URL,
+                         headers={"User-Agent": HEADERS["User-Agent"]},
+                         timeout=15)
+        r.raise_for_status()
+        root = ET.fromstring(r.content)
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=LOOKBACK_MINUTES)
+        results = []
+        for item in root.findall(".//item"):
+            title = (item.findtext("title") or "").strip()
+            link  = (item.findtext("link") or "").strip()
+            desc  = (item.findtext("description") or "").strip()[:100]
+            pub   = item.findtext("pubDate") or ""
+            # Filter to WA state
+            if "Washington" not in title and "WA" not in title and "Washington" not in desc:
+                continue
+            uid = "inciweb-" + hashlib.md5((title+link).encode()).hexdigest()[:8]
+            if uid in posted:
+                continue
+            # Check recency
+            try:
+                from email.utils import parsedate_to_datetime
+                pub_dt = parsedate_to_datetime(pub).astimezone(timezone.utc)
+                if pub_dt < cutoff:
+                    continue
+            except Exception:
+                continue
+            text = f"\U0001f333\U0001f525 InciWeb \u2014 {title}\n{desc}\n{link}\n#WAwx #wildfire #Washington"
+            if len(text) > MAX_TWEET_LEN:
+                text = text[:MAX_TWEET_LEN-1] + "…"
+            results.append((text, uid))
+        log.info(f"InciWeb: {len(results)} WA incident updates.")
+        return results
+    except Exception as e:
+        log.error(f"InciWeb fetch error: {e}")
+        return []
+
+
+# ── NOAA Space Weather ────────────────────────────────────────────────────────
+def fetch_space_weather(posted: set) -> list[tuple[str, str]]:
+    """
+    NOAA SWPC geomagnetic storm alerts — relevant for PNW aurora visibility
+    and potential GPS/radio disruption. Post Kp >= 5 events.
+    """
+    try:
+        r = requests.get(SWPC_ALERT_URL,
+                         headers={"User-Agent": HEADERS["User-Agent"]},
+                         timeout=10)
+        r.raise_for_status()
+        alerts = r.json()
+    except Exception as e:
+        log.debug(f"SWPC fetch: {e}")
+        return []
+
+    cutoff  = datetime.now(timezone.utc) - timedelta(minutes=LOOKBACK_MINUTES)
+    results = []
+    for alert in alerts:
+        msg   = alert.get("message", "")
+        issue = alert.get("issue_datetime", "")
+
+        # Only post geomagnetic storm / aurora alerts
+        if not any(kw in msg for kw in
+                   ["Geomagnetic", "Aurora", "G1", "G2", "G3", "G4", "G5",
+                    "Kp", "WATCH", "WARNING", "ALERT"]):
+            continue
+        # Filter to recent
+        try:
+            issue_dt = datetime.fromisoformat(issue.replace("Z", "+00:00"))
+            if issue_dt < cutoff:
+                continue
+        except Exception:
+            continue
+
+        uid = "swpc-" + hashlib.md5((issue + msg[:50]).encode()).hexdigest()[:8]
+        if uid in posted:
+            continue
+
+        # Extract the key line
+        lines = [l.strip() for l in msg.split("\n") if l.strip()]
+        summary = " ".join(lines[:3])[:200]
+
+        text = f"\U0001f30c NOAA Space Weather Alert\n{summary}\n#aurora #PNW #WAwx #spaceweather"
+        if len(text) > MAX_TWEET_LEN:
+            text = text[:MAX_TWEET_LEN-1] + "…"
+        results.append((text, uid))
+
+    log.info(f"SWPC: {len(results)} space weather alerts.")
+    return results
+
+
+# ── Marine alerts (Puget Sound) ───────────────────────────────────────────────
+def is_marine_alert(props: dict) -> bool:
+    """Check if alert affects Puget Sound marine zones."""
+    zones = {z.split("/")[-1] for z in props.get("affectedZones", [])}
+    event = props.get("event", "")
+    return bool(zones & MARINE_ZONES) or "Marine" in event or "Small Craft" in event
+
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def run():
