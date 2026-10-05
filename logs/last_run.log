@@ -1,0 +1,7 @@
+2026-10-05 03:19:07,449 [INFO] === NWS Alert Bot (Puget Sound) ===
+2026-10-05 03:19:07,449 [INFO] New cache format: this run marks current items as seen and posts nothing.
+2026-10-05 03:19:08,043 [INFO] X credentials work: @bdgroves
+2026-10-05 03:19:08,255 [INFO] NWS WA: 0 active alerts
+2026-10-05 03:19:08,256 [INFO] NWS: 0 postable products in 0 hazards
+2026-10-05 03:19:08,380 [INFO] USGS: 0 quakes M3.0+ in 24 h
+2026-10-05 03:19:08,381 [INFO] Done. posted=0 failed=0 held=0 bootstrap=True dry_run=False cache=0
