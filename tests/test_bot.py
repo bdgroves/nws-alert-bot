@@ -166,3 +166,15 @@ def test_cap_holds_the_rest(bot, monkeypatch):
     assert len(x.sent) == 1
     main.main()
     assert len(x.sent) == 2
+
+
+def test_standby_watches_without_posting(bot, monkeypatch):
+    main, core, feeds, x, tmp = bot
+    seed(tmp)
+    monkeypatch.setattr(core, "STANDBY", True)
+    feeds["alerts"] = [alert("Winter Storm Warning", etn=11)]
+    assert main.main() == 0 and x.sent == []
+    assert "standing by" in (tmp / "logs" / "posts.jsonl").read_text()
+    monkeypatch.setattr(core, "STANDBY", False)
+    main.main()
+    assert x.sent == []          # already seen while standing by: no stale post
