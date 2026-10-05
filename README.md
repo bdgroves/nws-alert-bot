@@ -4,29 +4,28 @@
 
 ---
 
-An autonomous weather monitoring bot for the **Pacific Northwest** — with a special focus on **King and Pierce County, WA**. Built on the same architecture as [@SierraNevadaWX](https://twitter.com/SierraNevadaWX), expanded with upper air science, river flood monitoring, and earthquake detection.
+An autonomous weather monitoring bot for the **Pacific Northwest** — with a special focus on **King and Pierce County, WA**. Built on the same architecture as [@SierraNevadaWX](https://twitter.com/SierraNevadaWX).
+Runs on a GitHub Actions schedule. No server. No cost. Just the data.
 
-Runs every 5 minutes on GitHub Actions. No server. No cost. Just the data.
+---
 
 ---
 
-## 📡 What It Monitors
+## 📡 What It Posts
 
-| Source | Trigger | Coverage |
-|--------|---------|----------|
-| 🌩️ **NWS Weather Alerts** | Any alert within lookback window | WA, OR, CA, NV |
-| 💧 **River Gauges** | At or above minor flood stage | Green, White, Puyallup, Cedar, Snoqualmie |
-| 🌋 **USGS Earthquakes** | M2.5+ in Puget Sound region | 46-49.5°N, 125-120°W |
-| 🌡️ **Surface Obs Snapshot** | Every ~3 hours | Seattle, Tacoma, Renton |
-| 🎈 **Upper Air Sounding** | 30-90 min after 00Z/12Z launches | SEA (Seattle) balloon |
-| 🔥 **NIFC Wildfires** | New fire ≥10 acres, <85% contained | King/Pierce extended bbox |
-| 🌲🔥 **InciWeb** | New WA wildfire incident update | Washington state |
-| 🌌 **NOAA Space Weather** | Geomagnetic storm G1+ alert | Nationwide (aurora visible PNW) |
-| ⛵ **Marine Alerts** | Small Craft, Gale, Tsunami | Puget Sound marine zones |
+Only what matters. One post per hazard, never one per bulletin.
 
-**King & Pierce County alerts are flagged with 📍** and logged separately so you always know when something is headed your way.
+| Source | Posts when | Coverage |
+|--------|-----------|----------|
+| 🌩️ **NWS warnings & watches** 📍 | A new warning or watch covers King or Pierce County, or an Air Quality Alert (smoke) | King & Pierce County |
+| 🚨 **NWS high-impact warnings** | Tornado, severe thunderstorm, flash flood, tsunami, blizzard, ice storm, extreme wind or heat, fire, evacuation, volcano | Rest of Washington |
+| 🌋 **USGS earthquakes** | M3.0+ | 46–49.5°N, 125–120°W |
 
----
+What it deliberately leaves out: advisories and Special Weather Statements, updates and extensions of a hazard it already posted, Oregon/California/Nevada (the [Sierra bot](https://github.com/bdgroves/sierra-alert-bot) covers those), the 3-hourly temperature posts and the twice-daily balloon summaries.
+
+River flooding comes through the NWS **Flood Warnings** for the Green, White, Puyallup, Cedar and Snoqualmie forecast points, which carry the stage and expected crest.
+
+**How "one post per hazard" works:** NWS hazards carry a VTEC code with an event number. The bot posts when a hazard is new (or its area grows) and ignores continuations, extensions and cancellations. Zones that share a hazard in the same run are combined into one post. At most 6 posts per run; anything beyond that waits for the next run.
 
 ## 🏔️ Why King & Pierce County
 
@@ -44,35 +43,6 @@ The hazards here are not subtle:
 
 ---
 
-## 🌊 The Rivers We Watch
-
-| River | Station | Location | Minor Flood |
-|-------|---------|----------|------------|
-| Green River | grso3 | Auburn | TBD from NWPS |
-| White River | whro3 | Buckley | TBD from NWPS |
-| Cedar River | cdrw1 | Renton | TBD from NWPS |
-| Snoqualmie River | snoo3 | Snoqualmie | TBD from NWPS |
-| Puyallup River | puyallupnf | Puyallup | TBD from NWPS |
-
-Flood stages pulled dynamically from the NWS NWPS API — no hardcoded thresholds. Tweets when observed stage reaches minor flood category.
-
----
-
-## 🎈 The Balloon
-
-Twice a day — at 00Z (5 PM PDT) and 12Z (5 AM PDT) — a weather balloon launches from Seattle-Tacoma International Airport. It rises through the troposphere, measuring temperature, humidity, and wind every few hundred feet, transmitting until it bursts at roughly 100,000 feet.
-
-The `fetch_sounding_tweet()` function pulls that data from Iowa State's RAOB archive via Siphon and posts a summary 30-90 minutes after each launch. Key fields:
-
-- **Surface conditions** — temperature and RH at launch
-- **700mb temperature** — the key layer for PNW precipitation type. T700 below 0°C means snow level is low; below 2°C means mixed precip is possible at pass elevations
-- **500mb temperature** — the steering level for Pacific weather systems
-- **Max wind** — jet stream intensity
-
-This is the same data WFO Seattle forecasters use to assess snowpack melt risk, atmospheric river depth, and convective instability. Now it's in your Twitter feed.
-
----
-
 ## 🛠️ Setup
 
 ```bash
@@ -81,65 +51,48 @@ cd nws-alert-bot
 pixi install
 ```
 
-**GitHub Actions secrets:**
+**GitHub Actions secrets:** `TWITTER_API_KEY`, `TWITTER_API_SECRET`, `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_SECRET` (X Developer Portal → your app → Keys and tokens).
 
-| Secret | Where |
-|--------|-------|
-| `TWITTER_API_KEY` | Twitter Developer Portal → App → Keys |
-| `TWITTER_API_SECRET` | Twitter Developer Portal → App → Keys |
-| `TWITTER_ACCESS_TOKEN` | Twitter Developer Portal → App → Tokens |
-| `TWITTER_ACCESS_SECRET` | Twitter Developer Portal → App → Tokens |
-
-**Local testing:**
 ```bash
-pixi run dry-run    # see what would be tweeted
-pixi run check      # count active WA alerts
-pixi run bot        # live run (posts to Twitter)
+pixi run dry-run          # log what would post, post nothing
+pixi run bot              # live run
+pip install pytest requests && pytest -q tests   # offline tests, fake feeds
 ```
+
+From the Actions tab, **Run workflow** with *Dry run* ticked shows what would post without posting.
 
 ---
 
-## 📋 Tweet formats
+## 🩺 Is it working?
 
-**NWS Alert (King/Pierce flagged):**
-```
-⛈️ Severe Thunderstorm Warning 📍 — King County
-Until 4:45 PM PDT
-60 MPH WIND AND PENNY SIZE HAIL
-https://api.weather.gov/alerts/...
-```
+Every run commits its own record, so you never need the Actions log:
 
-**River Flood Alert:**
+- `logs/last_run.log` — the full log of the latest run
+- `logs/posts.jsonl` — every post attempt (posted, held, or the exact X error)
+- `posted_ids.json` → `state` — `x_ok`, `x_error`, `x_error_since`, and `x_check` (a no-post check of the X keys, run on the first run of a new cache)
+
+If X starts refusing posts, the run **fails once** so GitHub emails you, then keeps logging quietly until posting works again.
+
+---
+
+## 📋 Post formats
+
+**NWS alert (King/Pierce):**
 ```
-💧 Green River at Auburn — Minor Flooding
-Stage: 14.2 ft (minor flood = 13.0 ft)
-#WAwx #KingCounty #PierceCounty
+❄️ Winter Storm Warning 📍
+Seattle and Vicinity; Tacoma Area
+Until Tue 4 PM PST
+Heavy snow. Total accumulations of 6 to 10 inches.
+https://www.weather.gov/sew/
+#WAwx
 ```
 
 **Earthquake:**
 ```
-🌋 M3.2 Earthquake — 12km SSE of Renton, WA
-8.4km deep
-https://earthquake.usgs.gov/earthquakes/...
-#WAwx #earthquake #PNW
-```
-
-**Surface Obs (every ~3h):**
-```
-🌡️ King/Pierce Co. — 8:45 AM PDT
-Seattle: 58°F  RH:82%  💨12mph
-Tacoma: 56°F  RH:85%  calm
-Renton: 57°F  RH:80%  💨8mph
-#WAwx #Seattle #Tacoma
-```
-
-**Upper Air Sounding (near 00Z/12Z):**
-```
-🎈 Seattle Upper Air — 5:00 PM PDT
-Sfc: 14.2°C  RH:72%
-700mb: 2.1°C  500mb: -12.4°C  🌨️ Mixed precip
-Max wind: 45kt
-#WAwx #Seattle #upperair #PNW
+🌋 M3.4 earthquake — 5 km N of Tacoma, WA
+Sun 1:12 PM PDT · 22 km deep · 41 felt reports
+https://earthquake.usgs.gov/earthquakes/eventpage/...
+#WAwx #earthquake
 ```
 
 ---
@@ -149,16 +102,15 @@ Max wind: 45kt
 ```
 nws-alert-bot/
 ├── bot/
-│   └── main.py              # All data sources + tweet formatting
-├── .github/
-│   └── workflows/
-│       └── nws-bot.yml      # GitHub Actions schedule (every 5 min)
-├── posted_ids.json          # Auto-committed dedup cache
-└── pyproject.toml           # pixi dependencies
+│   ├── main.py              # What to post (sources and filters)
+│   └── core.py              # Cache, posting, run log (shared with sierra-alert-bot)
+├── tests/test_bot.py        # Offline tests with fake feeds and a fake X client
+├── logs/                    # last_run.log + posts.jsonl, committed each run
+├── .github/workflows/
+│   ├── nws-bot.yml          # Schedule + manual dry run
+│   └── test.yml             # Tests on every code push
+└── posted_ids.json          # Dedup cache + X status, committed each run
 ```
-
-**Runtime:** GitHub Actions free tier — ~72 compute-minutes/month (3.6% of 2,000 free)
-**Language:** Python 3.12 · **Package manager:** pixi · **API:** Tweepy v4
 
 ---
 
@@ -166,11 +118,8 @@ nws-alert-bot/
 
 | Data | Provider | Endpoint |
 |------|----------|----------|
-| Weather Alerts | NWS | `api.weather.gov/alerts/active/area/{state}` |
-| Surface Observations | NWS | `api.weather.gov/stations/{id}/observations/latest` |
-| River Gauges | NWS NWPS | `api.water.noaa.gov/nwps/v1/gauges/{id}/stageflow` |
+| Weather alerts | NWS | `api.weather.gov/alerts/active?area=WA` |
 | Earthquakes | USGS | `earthquake.usgs.gov/fdsnws/event/1/query` |
-| Upper Air Soundings | Iowa State RAOB | Siphon / IAStateUpperAir |
 
 ---
 
