@@ -1,5 +1,5 @@
-2026-10-08 21:28:37,752 [INFO] === NWS Alert Bot (Puget Sound) ===
-2026-10-08 21:28:38,444 [INFO] NWS WA: 1 active alerts
-2026-10-08 21:28:38,445 [INFO] NWS: 0 postable products in 0 hazards
-2026-10-08 21:28:38,736 [INFO] USGS: 0 quakes M3.0+ in 24 h
-2026-10-08 21:28:38,737 [INFO] Done. posted=0 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=0
+2026-10-09 01:23:02,454 [INFO] === NWS Alert Bot (Puget Sound) ===
+2026-10-09 01:23:02,911 [INFO] NWS WA: 1 active alerts
+2026-10-09 01:23:02,912 [INFO] NWS: 0 postable products in 0 hazards
+2026-10-09 01:23:03,028 [INFO] USGS: 0 quakes M3.0+ in 24 h
+2026-10-09 01:23:03,030 [INFO] Done. posted=0 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=0
