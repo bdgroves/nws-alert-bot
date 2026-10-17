@@ -1,5 +1,11 @@
-2026-10-16 23:50:10,862 [INFO] === NWS Alert Bot (Puget Sound) ===
-2026-10-16 23:50:11,313 [INFO] NWS WA: 0 active alerts
-2026-10-16 23:50:11,314 [INFO] NWS: 0 postable products in 0 hazards
-2026-10-16 23:50:11,491 [INFO] USGS: 0 quakes M3.0+ in 24 h
-2026-10-16 23:50:11,492 [INFO] Done. posted=0 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=0
+2026-10-17 04:13:04,381 [INFO] === NWS Alert Bot (Puget Sound) ===
+2026-10-17 04:13:05,173 [INFO] NWS WA: 0 active alerts
+2026-10-17 04:13:05,173 [INFO] NWS: 0 postable products in 0 hazards
+2026-10-17 04:13:05,346 [INFO] USGS: 1 quakes M3.0+ in 24 h
+2026-10-17 04:13:05,346 [INFO] [standby] would post eq:uw714121212
+🌋 M3.1 earthquake — 20 km E of Forks, Washington
+Fri 8:37 PM PDT · 38 km deep · 8 felt reports
+https://earthquake.usgs.gov/earthquakes/eventpage/uw714121212
+#WAwx #earthquake
+
+2026-10-17 04:13:05,347 [INFO] Done. posted=1 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=1
