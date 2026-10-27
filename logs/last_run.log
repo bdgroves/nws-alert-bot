@@ -1,4 +1,5 @@
-2026-10-26 21:56:06,733 [INFO] === NWS Alert Bot (Puget Sound) ===
-2026-10-26 21:56:07,416 [ERROR] NWS fetch failed: 503 Server Error: Service Unavailable for url: https://api.weather.gov/alerts/active?area=WA
-2026-10-26 21:56:07,803 [INFO] USGS: 0 quakes M3.0+ in 24 h
-2026-10-26 21:56:07,804 [INFO] Done. posted=0 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=1
+2026-10-27 01:24:54,789 [INFO] === NWS Alert Bot (Puget Sound) ===
+2026-10-27 01:24:55,242 [INFO] NWS WA: 5 active alerts
+2026-10-27 01:24:55,242 [INFO] NWS: 0 postable products in 0 hazards
+2026-10-27 01:24:55,836 [INFO] USGS: 0 quakes M3.0+ in 24 h
+2026-10-27 01:24:55,838 [INFO] Done. posted=0 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=1
