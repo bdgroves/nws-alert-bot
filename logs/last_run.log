@@ -1,11 +1,5 @@
-2026-11-21 07:46:21,851 [INFO] === NWS Alert Bot (Puget Sound) ===
-2026-11-21 07:46:22,209 [INFO] NWS WA: 0 active alerts
-2026-11-21 07:46:22,210 [INFO] NWS: 0 postable products in 0 hazards
-2026-11-21 07:46:22,285 [INFO] USGS: 1 quakes M3.0+ in 24 h
-2026-11-21 07:46:22,285 [INFO] [standby] would post eq:uw714140682
-🌋 M3.4 earthquake — 1 km NW of Lea Hill, Washington
-Fri 11:13 PM PST · 55 km deep · 733 felt reports
-https://earthquake.usgs.gov/earthquakes/eventpage/uw714140682
-#WAwx #earthquake
-
-2026-11-21 07:46:22,286 [INFO] Done. posted=1 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=2
+2026-11-21 15:40:24,851 [INFO] === NWS Alert Bot (Puget Sound) ===
+2026-11-21 15:40:25,379 [INFO] NWS WA: 0 active alerts
+2026-11-21 15:40:25,380 [INFO] NWS: 0 postable products in 0 hazards
+2026-11-21 15:40:25,507 [INFO] USGS: 1 quakes M3.0+ in 24 h
+2026-11-21 15:40:25,508 [INFO] Done. posted=0 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=2
