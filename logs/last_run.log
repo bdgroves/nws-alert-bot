@@ -1,12 +1,5 @@
-2026-11-24 00:04:03,435 [INFO] === NWS Alert Bot (Puget Sound) ===
-2026-11-24 00:04:03,881 [INFO] NWS WA: 26 active alerts
-2026-11-24 00:04:03,882 [INFO] NWS: 2 postable products in 1 hazards
-2026-11-24 00:04:03,882 [INFO] [standby] would post wa:KSEW.CF.A.0005.2026
-💧 Coastal Flood Watch 📍
-City of Seattle; Lowlands of Pierce and Southern King Counties
-Until Thu 5 PM PST
-For the Coastal Flood Advisory, minor coastal flooding expected. Inundation of 1.5 to 2.5 feet above ground level is possible Tuesday along…
-#WAwx
-
-2026-11-24 00:04:04,175 [INFO] USGS: 0 quakes M3.0+ in 24 h
-2026-11-24 00:04:04,177 [INFO] Done. posted=1 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=4
+2026-11-24 10:04:43,931 [INFO] === NWS Alert Bot (Puget Sound) ===
+2026-11-24 10:04:44,417 [INFO] NWS WA: 27 active alerts
+2026-11-24 10:04:44,419 [INFO] NWS: 2 postable products in 1 hazards
+2026-11-24 10:04:44,636 [INFO] USGS: 0 quakes M3.0+ in 24 h
+2026-11-24 10:04:44,638 [INFO] Done. posted=0 failed=0 held=0 bootstrap=False dry_run=False standby=True cache=4
